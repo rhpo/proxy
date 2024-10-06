@@ -1,0 +1,9 @@
+{
+	"/": [
+		"src/routes/+page.js"
+	],
+	"/club": [
+		"src/routes/club/+page.js"
+	],
+	"/register": []
+}
