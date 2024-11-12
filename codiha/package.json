@@ -1,0 +1,39 @@
+{
+	"name": "ramyhadid",
+	"version": "0.0.1",
+	"scripts": {
+		"dev": "vite dev --host",
+		"build": "vite build",
+		"preview": "vite preview",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
+		"lint": "prettier --plugin-search-dir . --check .",
+		"format": "prettier --plugin-search-dir . --write ."
+	},
+	"devDependencies": {
+		"@fontsource/fira-mono": "^4.5.10",
+		"@neoconfetti/svelte": "^1.0.0",
+		"@sveltejs/adapter-auto": "^2.0.0",
+		"@sveltejs/kit": "^1.20.4",
+		"@types/cookie": "^0.5.1",
+		"prettier": "^2.8.0",
+		"prettier-plugin-svelte": "^2.10.1",
+		"svelte": "^4.0.5",
+		"svelte-check": "^3.4.3",
+		"svelte-hamburgers": "^4.2.0",
+		"svelte-typewriter": "^3.2.0",
+		"typescript": "^5.0.0",
+		"vite": "^4.4.2"
+	},
+	"type": "module",
+	"dependencies": {
+		"@fortawesome/free-brands-svg-icons": "^6.4.2",
+		"@fortawesome/free-solid-svg-icons": "^6.4.2",
+		"aos": "^2.3.4",
+		"svelte-fa": "^3.0.4",
+		"svelte-preprocess": "^5.1.0",
+		"svelte-preprocess-import-assets": "^1.0.1",
+		"sveltejs-tippy": "^3.0.0",
+		"vanilla-tilt-svelte": "^1.0.4"
+	}
+}
