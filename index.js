@@ -15,9 +15,13 @@ const PORT = process.env['PORT'] || 8080;
 
 if (!targetUrl) throw new Error('No target URL provided');
 
+function filterIP(ip) {
+  return ip.split(',')[0]
+}
+
 // Define the `/update-ddns` route specifically so it’s excluded from proxying
 app.get('/update-ddns', (req, res) => {
-  const clientIp = req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+  const clientIp = filterIP(req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
 
   targetUrl = `http://${clientIp}`;
 
@@ -43,7 +47,7 @@ app.use((req, res, next) => {
     secure: false,
     pathRewrite: (path, req) => path, // Keeps the original path unchanged
     onProxyReq: (proxyReq, req, res) => {
-      const clientIp = req.headers['x-forwarded-for'] || req.connection.remoteAddress;
+      const clientIp = filterIP(req.headers['x-forwarded-for'] || req.connection.remoteAddress);
       proxyReq.setHeader('X-Forwarded-For', clientIp);
       proxyReq.setHeader('Host', req.headers.host);
       if (req.headers.origin) {
