@@ -4,6 +4,8 @@ const fs = require('fs');
 const dotenv = require('dotenv');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+let clientIp = '';
+
 dotenv.config();
 
 const app = express();
@@ -21,7 +23,7 @@ function filterIP(ip) {
 
 // Define the `/update-ddns` route specifically so it’s excluded from proxying
 app.get('/update-ddns', (req, res) => {
-  const clientIp = filterIP(req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
+  clientIp = filterIP(req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
 
   targetUrl = `http://${clientIp}`;
 
@@ -32,6 +34,10 @@ app.get('/update-ddns', (req, res) => {
   console.log('Updated target URL to:', targetUrl);
   res.send('OK');
 });
+
+app.get('/_ip', (req, res) => {
+	return res.send(clientIp.toString());
+})
 
 // Dynamically create proxy middleware for each request
 app.use((req, res, next) => {
