@@ -33,15 +33,13 @@ const proxy = createProxyMiddleware({
 	      
 	      // Store original host in a custom header
 	      const originalHost = req.headers.host;
-	      proxyReq.setHeader('X-Passed-Host', originalHost); 
 
 		  if (req.headers['x-passed-host']) {
-		  	proxyReq.setHeader('X-Passed-Host', originalHost); 
-		  	proxyReq.setHeader('Host', req.headers['x-passed-host']);
+		  	proxyReq.setHeader('X-Passed-Host', req.headers['x-passed-host']); 
 		  	
 		  	console.log("Passed CUSTOM Host: ", req.headers['x-passed-host']);
 		  } else {
-		  	proxyReq.setHeader('Host', originalHost);
+		  	proxyReq.setHeader('X-Passed-Host', originalHost);
 		  }
 	    
 	      console.log('Real IP:', clientIp);
