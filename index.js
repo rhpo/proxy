@@ -29,21 +29,28 @@ const proxy = createProxyMiddleware({
   preserveHeaderKeyCase: true,
   on: {
   	proxyReq: (proxyReq, req, res) => {
-
-	   if (req.__expectHeader) {
-	            proxyReq.setHeader('Expect', req.__expectHeader)
-	        }
-	        
 	      const clientIp = filterIP(req.headers['x-forwarded-for'] || req.connection.remoteAddress);
+	      
+	      // Store original host in a custom header
+	      const originalHost = req.headers.host;
+	      proxyReq.setHeader('X-Passed-Host', originalHost); 
+
+		  if (req.headers['x-passed-host']) {
+		  	proxyReq.setHeader('X-Passed-Host', originalHost); 
+		  	proxyReq.setHeader('Host', req.headers['x-passed-host']);
+		  	
+		  	console.log("Passed CUSTOM Host: ", req.headers['x-passed-host']);
+		  } else {
+		  	proxyReq.setHeader('Host', originalHost);
+		  }
+	    
 	      console.log('Real IP:', clientIp);
-	      console.log('Real Host:', req.headers.host);
-	  
+	      console.log('Original Host:', originalHost);
+	    
+	      // Optionally, pass X-Forwarded-For as well
 	      proxyReq.setHeader('X-Forwarded-For', clientIp);
-	      proxyReq.setHeader('Host', req.headers.host);
-	      if (req.headers.origin) {
-	        proxyReq.setHeader('Origin', req.headers.origin);
-	      }
 	    }
+	    
 	}
 });
 
