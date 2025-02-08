@@ -9,7 +9,6 @@ let clientIp = '';
 dotenv.config();
 
 const app = express();
-app.use(cors({ origin: '*' }));
 
 // Initial target server URL from .env
 let targetUrl = process.env['TARGET'];
@@ -18,13 +17,49 @@ const PORT = process.env['PORT'] || 8080;
 if (!targetUrl) throw new Error('No target URL provided');
 
 function filterIP(ip) {
-  return ip.split(',')[0]
+  return ip.split(',')[0];
 }
+
+// ✅ Define proxy once, outside of request handlers
+const proxy = createProxyMiddleware({
+  target: targetUrl,
+  changeOrigin: true,
+  secure: false,
+  logLevel: 'debug', // Enable debugging logs
+  preserveHeaderKeyCase: true,
+  on: {
+  	proxyReq: (proxyReq, req, res) => {
+
+	   if (req.__expectHeader) {
+	            proxyReq.setHeader('Expect', req.__expectHeader)
+	        }
+	        
+	      const clientIp = filterIP(req.headers['x-forwarded-for'] || req.connection.remoteAddress);
+	      console.log('Real IP:', clientIp);
+	      console.log('Real Host:', req.headers.host);
+	  
+	      proxyReq.setHeader('X-Forwarded-For', clientIp);
+	      proxyReq.setHeader('Host', req.headers.host);
+	      if (req.headers.origin) {
+	        proxyReq.setHeader('Origin', req.headers.origin);
+	      }
+	    }
+	}
+});
+
+// ✅ Attach the proxy middleware to all routes (except /update-ddns)
+app.use((req, res, next) => {
+  if (req.path === '/update-ddns' || req.path === '/_ip') {
+    return next(); // Skip proxy for these routes
+  }
+  proxy(req, res, next);
+});
+
+app.use(cors({ origin: '*' }));
 
 // Define the `/update-ddns` route specifically so it’s excluded from proxying
 app.get('/update-ddns', (req, res) => {
   clientIp = filterIP(req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
-
   targetUrl = `http://${clientIp}`;
 
   // Write changes to .env
@@ -36,32 +71,7 @@ app.get('/update-ddns', (req, res) => {
 });
 
 app.get('/_ip', (req, res) => {
-	return res.send(clientIp.toString());
-})
-
-// Dynamically create proxy middleware for each request
-app.use((req, res, next) => {
-  if (req.path === '/update-ddns') {
-    // Skip proxy for the `/update-ddns` route
-    return next();
-  }
-
-  // Create proxy middleware with the current `targetUrl`
-  createProxyMiddleware({
-    target: targetUrl,
-    changeOrigin: true,
-    secure: false,
-    pathRewrite: (path, req) => path, // Keeps the original path unchanged
-    onProxyReq: (proxyReq, req, res) => {
-      const clientIp = filterIP(req.headers['x-forwarded-for'] || req.connection.remoteAddress);
-      proxyReq.setHeader('X-Forwarded-For', clientIp);
-      proxyReq.setHeader('Host', req.headers.host);
-      if (req.headers.origin) {
-        proxyReq.setHeader('Origin', req.headers.origin);
-      }
-    },
-    preserveHeaderKeyCase: true,
-  })(req, res, next); // Call the middleware immediately
+  return res.send(clientIp.toString());
 });
 
 app.listen(PORT, () => {
