@@ -28,18 +28,29 @@ const proxy = createProxyMiddleware({
   logLevel: 'debug', // Enable debugging logs
   preserveHeaderKeyCase: true,
   on: {
+
+  	error: (err, req, res) => {
+	      console.error(`[Proxy] Error in proxying request to ${targetUrl}:`, err.message);
+	      res.status(500).send(`Proxy Error: ${err.message}`);
+	    },
+  
   	proxyReq: (proxyReq, req, res) => {
 	      const clientIp = filterIP(req.headers['x-forwarded-for'] || req.connection.remoteAddress);
 	      
 	      // Store original host in a custom header
 	      const originalHost = req.headers.host;
+		  const customHost   = req.headers['x-passed-host'];
 
-		  if (req.headers['x-passed-host']) {
-		  	proxyReq.setHeader('X-Passed-Host', req.headers['x-passed-host']); 
+		  if (customHost) {
+		  	proxyReq.setHeader('X-Passed-Host', customHost); 
+	      	proxyReq.setHeader('Host', customHost);
 		  	
-		  	console.log("Passed CUSTOM Host: ", req.headers['x-passed-host']);
+		  	console.log("Passed CUSTOM Host: ", customHost);
 		  } else {
-		  	proxyReq.setHeader('X-Passed-Host', originalHost);
+		  	proxyReq.setHeader('X-Passed-Host', originalHost); 
+	      	proxyReq.setHeader('Host', originalHost);
+
+	      	console.log("Using default host: ", originalHost);
 		  }
 	    
 	      console.log('Real IP:', clientIp);
@@ -65,14 +76,17 @@ app.use(cors({ origin: '*' }));
 // Define the `/update-ddns` route specifically so it’s excluded from proxying
 app.get('/update-ddns', (req, res) => {
   clientIp = filterIP(req.query.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress);
-  targetUrl = `http://${clientIp}`;
 
-  // Write changes to .env
-  fs.writeFileSync('.env', `TARGET=${targetUrl}\nPORT=${PORT}\n`);
-  dotenv.config();
+  if (targetUrl !== `http://${clientIp}`) {
+  	targetUrl = `http://${clientIp}`;
 
-  console.log('Updated target URL to:', targetUrl);
-  res.send('OK');
+	// Write changes to .env
+	fs.writeFileSync('.env', `TARGET=${targetUrl}\nPORT=${PORT}\n`);
+	dotenv.config();
+
+	console.log('Updated target URL to:', targetUrl);
+	res.send('OK');	
+  }
 });
 
 app.get('/_ip', (req, res) => {
