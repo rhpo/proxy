@@ -85,8 +85,9 @@ app.get('/update-ddns', (req, res) => {
 	dotenv.config();
 
 	console.log('Updated target URL to:', targetUrl);
-	res.send('OK');	
+	res.send(`OK`);	
   }
+	else res.send(`ALREADY SET, (current="${targetUrl.split("//")[1]}", passed="${clientIp}")`);	
 });
 
 app.get('/_ip', (req, res) => {
