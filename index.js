@@ -11,10 +11,15 @@ dotenv.config();
 const app = express();
 
 // Initial target server URL from .env
-let targetUrl = process.env['TARGET'];
+let targetUrl = process.env['TARGET'] || 'https://codiha.com';
 const PORT = process.env['PORT'] || 8080;
 
-if (!targetUrl) throw new Error('No target URL provided');
+if (!targetUrl) {
+	// throw new Error('No target URL provided');
+
+	fs.writeFileSync('.env', `TARGET=${targetUrl}\nPORT=${PORT}\n`);
+	dotenv.config();
+}
 
 function filterIP(ip) {
   return ip.split(',')[0];
