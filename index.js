@@ -42,6 +42,7 @@ app.use((req, res, next) => {
 	  target: targetUrl,
 	  changeOrigin: true,
 	  secure: false,
+	  ws: true, // ✅ Enable WebSocket proxying
 	  logLevel: 'debug', // Enable debugging logs
 	  preserveHeaderKeyCase: true,
 	  on: {
